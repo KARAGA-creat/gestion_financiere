@@ -1,0 +1,22 @@
+# Virtual environment
+env/
+
+# Variables secrètes
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django
+*.log
+db.sqlite3
+media/
+
+# VS Code
+.vscode/
+
+# Node modules (pour React plus tard)
+node_modules/
