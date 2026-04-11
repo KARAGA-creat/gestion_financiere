@@ -7,7 +7,6 @@ from entreprises.models import Entreprise
 class Utilisateur(AbstractUser):
     ROLE_CHOICES = [
         ('admin',        'Administrateur'),
-        ('comptable',    'Comptable'),
         ('gestionnaire', 'Gestionnaire'),
     ]
     STATUT_CHOICES = [
