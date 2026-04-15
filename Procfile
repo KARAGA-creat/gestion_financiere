@@ -1,1 +1,1 @@
-gunicorn gestion_financiere.wsgi
+web: gunicorn gestion_financiere.wsgi
