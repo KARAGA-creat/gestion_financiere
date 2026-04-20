@@ -61,7 +61,7 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = [
   "https:// frontend-production-17f7.up.railway.app",
-  "https://gestionfinanciere-production.up.railway.app",
+  'https://gestionfinanciere-production.up.railway.app',
 ]
 
 MIDDLEWARE = [
