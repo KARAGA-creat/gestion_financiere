@@ -51,14 +51,21 @@ INSTALLED_APPS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-   # "http://localhost:5173",  # React frontend
-    "https:// frontend-production-17f7.up.railway.app",
+    "https://frontend-production-17f7.up.railway.app",
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
 CSRF_TRUSTED_ORIGINS = [
-  "https:// frontend-production-17f7.up.railway.app",
-  'https://gestionfinanciere-production.up.railway.app',
+    "https://frontend-production-17f7.up.railway.app",
 ]
+
+CORS_ALLOW_HEADERS = [
+    'authorization',
+    'content-type',
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 
@@ -164,4 +171,3 @@ import os
 ALLOWED_HOSTS = ['gestionfinanciere-production.up.railway.app', 'localhost', '127.0.0.1']
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEBUG = config('DEBUG', default=False, cast=bool)
-CORS_ALLOW_CREDENTIALS = True
