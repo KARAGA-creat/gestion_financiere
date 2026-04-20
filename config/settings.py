@@ -167,5 +167,7 @@ AUTH_USER_MODEL = 'authentication.Utilisateur'
 import os 
 MEDIA_URL  = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-ALLOWED_HOSTS = ['*']
+import os
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+DEBUG = config('DEBUG', default=False, cast=bool)
