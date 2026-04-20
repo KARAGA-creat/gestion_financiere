@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend
+    "https:// frontend-production-17f7.up.railway.app",
 ]
 
 MIDDLEWARE = [
@@ -168,6 +169,7 @@ import os
 MEDIA_URL  = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 import os
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['gestionfinanciere-production.up.railway.app', 'localhost', '127.0.0.1']
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEBUG = config('DEBUG', default=False, cast=bool)
+CORS_ALLOW_CREDENTIALS = True
