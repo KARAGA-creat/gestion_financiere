@@ -1,4 +1,11 @@
 """
+
+from decouple import config
+from pathlib import Path
+import os
+import dj_database_url  
+impoort pymysql
+pymysql.install_as_MySQLdb()
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
