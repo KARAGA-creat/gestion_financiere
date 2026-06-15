@@ -33,7 +33,7 @@ class InscriptionSerializer(serializers.Serializer):
     # Infos entreprise
     nom_entreprise = serializers.CharField(max_length=150)
     devise         = serializers.ChoiceField(choices=[
-        ('XOF', 'XOF'), ('GNF', 'GNF'),
+        ('XOF', 'XOF'), ('GNF', 'GNF'), ('XAF', 'XAF'),
         ('EUR', 'EUR'), ('USD', 'USD'), ('MAD', 'MAD'),
     ])
     date_creation  = serializers.DateField()

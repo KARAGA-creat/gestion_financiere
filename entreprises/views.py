@@ -5,10 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import Entreprise
 from .serializers import EntrepriseSerializer
+from authentication.permissions import IsAdminRole
 
 
 class EntrepriseDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'PUT':
+            return [IsAuthenticated(), IsAdminRole()]
+        return [IsAuthenticated()]
 
     def get(self, request):
         if request.user.id_entreprise is None:

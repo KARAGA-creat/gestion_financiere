@@ -5,9 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import Categorie
 from .serializers import CategorieSerializer
+from authentication.permissions import IsAdminRole
 
 class CategorieListView(APIView):
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated(), IsAdminRole()]
+        return [IsAuthenticated()]
 
     def get(self, request):
         categories = Categorie.objects.filter(
@@ -33,7 +38,7 @@ class CategorieListView(APIView):
 
 
 class CategorieDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminRole]
 
     def delete(self, request, pk):
         try:

@@ -5,9 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import Budget
 from .serializers import BudgetSerializer
+from authentication.permissions import IsAdminRole
 
 class BudgetListView(APIView):
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated(), IsAdminRole()]
+        return [IsAuthenticated()]
 
     def get(self, request):
         budgets = Budget.objects.filter(
@@ -33,7 +38,7 @@ class BudgetListView(APIView):
 
 
 class BudgetDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminRole]
 
     def put(self, request, pk):
         try:
