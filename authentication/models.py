@@ -23,6 +23,12 @@ class Utilisateur(AbstractUser):
     class Meta:
         db_table = 'utilisateur'
 
+    def save(self, *args, **kwargs):
+        # Les admins de l'app ont automatiquement accès au panneau Django admin
+        if self.role == 'admin':
+            self.is_staff = True
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.username} ({self.role})"
 
