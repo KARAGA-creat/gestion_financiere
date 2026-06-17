@@ -6,13 +6,13 @@ from .models import Entreprise
 
 @admin.register(Entreprise)
 class EntrepriseAdmin(admin.ModelAdmin):
-    list_display    = ('nom', 'plan_badge', 'date_fin_essai', 'acces_badge', 'devise', 'nb_utilisateurs', 'nb_transactions', 'logo_apercu')
+    list_display    = ('nom', 'plan_badge', 'acces_badge', 'date_fin_essai', 'date_fin_abonnement', 'devise', 'nb_utilisateurs', 'nb_transactions')
     search_fields   = ('nom',)
     list_filter     = ('plan', 'devise')
     ordering        = ('nom',)
     readonly_fields = ('logo_apercu', 'acces_badge')
-    fields          = ('nom', 'logo', 'logo_apercu', 'devise', 'date_creation', 'plan', 'date_fin_essai')
-    actions         = ['passer_en_payant', 'suspendre_acces', 'remettre_en_essai']
+    fields          = ('nom', 'logo', 'logo_apercu', 'devise', 'date_creation', 'plan', 'date_fin_essai', 'date_fin_abonnement')
+    actions         = ['passer_en_payant_1mois', 'renouveler_1mois', 'renouveler_3mois', 'suspendre_acces', 'remettre_en_essai']
 
     def plan_badge(self, obj):
         colors = {'essai': '#F59E0B', 'payant': '#22C55E', 'suspendu': '#EF4444'}
@@ -42,10 +42,34 @@ class EntrepriseAdmin(admin.ModelAdmin):
         return '—'
     logo_apercu.short_description = 'Logo'
 
-    def passer_en_payant(self, request, queryset):
-        queryset.update(plan='payant', date_fin_essai=None)
-        self.message_user(request, f'{queryset.count()} entreprise(s) passée(s) en abonné.')
-    passer_en_payant.short_description = '✅ Passer en abonné (payant)'
+    def passer_en_payant_1mois(self, request, queryset):
+        from datetime import date, timedelta
+        fin = date.today() + timedelta(days=30)
+        queryset.update(plan='payant', date_fin_essai=None, date_fin_abonnement=fin)
+        self.message_user(request, f'{queryset.count()} entreprise(s) activée(s) — accès jusqu\'au {fin.strftime("%d/%m/%Y")}.')
+    passer_en_payant_1mois.short_description = '✅ Activer abonnement (1 mois)'
+
+    def renouveler_1mois(self, request, queryset):
+        from datetime import date, timedelta
+        today = date.today()
+        for entreprise in queryset:
+            base = entreprise.date_fin_abonnement if entreprise.date_fin_abonnement and entreprise.date_fin_abonnement > today else today
+            entreprise.date_fin_abonnement = base + timedelta(days=30)
+            entreprise.plan = 'payant'
+            entreprise.save()
+        self.message_user(request, f'{queryset.count()} abonnement(s) renouvelé(s) de 30 jours.')
+    renouveler_1mois.short_description = '🔄 Renouveler 1 mois'
+
+    def renouveler_3mois(self, request, queryset):
+        from datetime import date, timedelta
+        today = date.today()
+        for entreprise in queryset:
+            base = entreprise.date_fin_abonnement if entreprise.date_fin_abonnement and entreprise.date_fin_abonnement > today else today
+            entreprise.date_fin_abonnement = base + timedelta(days=90)
+            entreprise.plan = 'payant'
+            entreprise.save()
+        self.message_user(request, f'{queryset.count()} abonnement(s) renouvelé(s) de 90 jours.')
+    renouveler_3mois.short_description = '🔄 Renouveler 3 mois'
 
     def suspendre_acces(self, request, queryset):
         queryset.update(plan='suspendu')
@@ -54,6 +78,6 @@ class EntrepriseAdmin(admin.ModelAdmin):
 
     def remettre_en_essai(self, request, queryset):
         from datetime import date, timedelta
-        queryset.update(plan='essai', date_fin_essai=date.today() + timedelta(days=30))
+        queryset.update(plan='essai', date_fin_essai=date.today() + timedelta(days=30), date_fin_abonnement=None)
         self.message_user(request, f'{queryset.count()} entreprise(s) remise(s) en essai (30 jours).')
     remettre_en_essai.short_description = '🔄 Remettre en essai (30 jours)'

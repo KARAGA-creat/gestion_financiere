@@ -17,25 +17,31 @@ class Entreprise(models.Model):
         ('suspendu', 'Suspendu'),
     ]
 
-    nom            = models.CharField(max_length=150)
-    logo           = models.ImageField(upload_to='logos/', blank=True, null=True)
-    devise         = models.CharField(max_length=10, choices=DEVISE_CHOICES, default='XOF')
-    date_creation  = models.DateField()
-    plan           = models.CharField(max_length=20, choices=PLAN_CHOICES, default='essai')
-    date_fin_essai = models.DateField(null=True, blank=True)
+    nom                  = models.CharField(max_length=150)
+    logo                 = models.ImageField(upload_to='logos/', blank=True, null=True)
+    devise               = models.CharField(max_length=10, choices=DEVISE_CHOICES, default='XOF')
+    date_creation        = models.DateField()
+    plan                 = models.CharField(max_length=20, choices=PLAN_CHOICES, default='essai')
+    date_fin_essai       = models.DateField(null=True, blank=True)
+    date_fin_abonnement  = models.DateField(null=True, blank=True)
 
     class Meta:
         db_table = 'entreprise'
 
     @property
     def acces_actif(self):
-        if self.plan == 'payant':
-            return True
+        today = timezone.now().date()
         if self.plan == 'suspendu':
             return False
-        # essai : vérifie la date
-        if self.date_fin_essai and timezone.now().date() > self.date_fin_essai:
-            return False
+        if self.plan == 'essai':
+            if self.date_fin_essai and today > self.date_fin_essai:
+                return False
+            return True
+        if self.plan == 'payant':
+            # Si une date d'abonnement est définie, elle prime
+            if self.date_fin_abonnement and today > self.date_fin_abonnement:
+                return False
+            return True
         return True
 
     def __str__(self):
