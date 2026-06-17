@@ -223,15 +223,25 @@ class InviterGestionnaireView(APIView):
             created_by=request.user,
         )
 
-        lien = f"{settings.FRONTEND_URL}/activation/{invitation.token}"
+        lien           = f"{settings.FRONTEND_URL}/activation/{invitation.token}"
         nom_entreprise = request.user.id_entreprise.nom
+        invite_par     = request.user.username
 
-        sujet  = f"Invitation à rejoindre {nom_entreprise} sur FinanceIQ"
-        corps  = (
+        sujet = f"Vous êtes invité(e) à rejoindre {nom_entreprise} sur FinanceIQ"
+        corps = (
             f"Bonjour,\n\n"
-            f"Vous avez été invité(e) à rejoindre {nom_entreprise} en tant que Gestionnaire sur FinanceIQ.\n\n"
-            f"Cliquez sur le lien ci-dessous pour créer votre accès :\n{lien}\n\n"
-            f"Ce lien est valable 48 heures.\n\n"
+            f"{invite_par}, responsable de {nom_entreprise}, vous invite à rejoindre "
+            f"l'espace FinanceIQ de l'entreprise en tant que Gestionnaire.\n\n"
+            f"FinanceIQ est une application de gestion financière qui vous permettra "
+            f"de suivre les transactions, les dettes et les budgets de {nom_entreprise}.\n\n"
+            f"─────────────────────────────\n"
+            f"Créer votre accès :\n"
+            f"{lien}\n"
+            f"─────────────────────────────\n\n"
+            f"⚠️  Ce lien est personnel et valable 48 heures.\n"
+            f"Ne le partagez avec personne.\n\n"
+            f"Si vous n'attendiez pas cette invitation, ignorez simplement cet email.\n\n"
+            f"Bienvenue dans l'équipe,\n"
             f"L'équipe FinanceIQ"
         )
 
