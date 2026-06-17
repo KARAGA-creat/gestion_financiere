@@ -1,0 +1,38 @@
+name: Rappels Abonnement
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Tous les jours à 8h UTC
+  workflow_dispatch:      # Permet de lancer manuellement depuis GitHub
+
+jobs:
+  envoyer-rappels:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installer les dépendances
+        working-directory: gestion_finance_backend
+        run: pip install -r requirements.txt
+
+      - name: Envoyer les rappels d'abonnement
+        working-directory: gestion_finance_backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+          EMAIL_HOST: smtp.gmail.com
+          EMAIL_PORT: "587"
+          EMAIL_USE_TLS: "True"
+          EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+          DEFAULT_FROM_EMAIL: ${{ secrets.DEFAULT_FROM_EMAIL }}
+          ALLOWED_HOSTS: financeiq-backend-lrt0.onrender.com,localhost
+          FRONTEND_URL: https://financeiq-frontend-self.vercel.app
+        run: python manage.py envoyer_rappels_abonnement
