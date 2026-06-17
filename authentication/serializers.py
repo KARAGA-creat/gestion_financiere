@@ -53,11 +53,14 @@ class InscriptionSerializer(serializers.Serializer):
         return value
 
     def create(self, validated_data):
-        # Créer l'entreprise
+        from datetime import date, timedelta
+        # Créer l'entreprise avec 30 jours d'essai
         entreprise = Entreprise.objects.create(
             nom=validated_data['nom_entreprise'],
             devise=validated_data['devise'],
             date_creation=validated_data['date_creation'],
+            plan='essai',
+            date_fin_essai=date.today() + timedelta(days=30),
         )
 
         # Créer l'utilisateur Admin

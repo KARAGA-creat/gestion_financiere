@@ -46,6 +46,12 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data
+            # Vérifier que l'accès de l'entreprise est actif
+            if user.id_entreprise and not user.id_entreprise.acces_actif:
+                return Response(
+                    {'error': 'acces_expire', 'acces_expire': True},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             # Succès : on efface les compteurs
             cache.delete(attempt_key)
             cache.delete(block_key)
