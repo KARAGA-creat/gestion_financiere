@@ -1,7 +1,27 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
+from threading import Thread
 from .models import Entreprise
+
+
+def _email_admin_entreprise(entreprise):
+    """Retourne l'email de l'admin de l'entreprise, ou None."""
+    from authentication.models import Utilisateur
+    admin = Utilisateur.objects.filter(id_entreprise=entreprise, role='admin').first()
+    return admin.email if admin and admin.email else None
+
+
+def _envoyer_async(sujet, corps, destinataire):
+    """Envoie un email dans un thread non-bloquant."""
+    def _send():
+        try:
+            send_mail(sujet, corps, settings.DEFAULT_FROM_EMAIL,
+                      [destinataire], fail_silently=True)
+        except Exception:
+            pass
+    Thread(target=_send, daemon=True).start()
 
 
 @admin.register(Entreprise)
@@ -65,10 +85,28 @@ class EntrepriseAdmin(admin.ModelAdmin):
         return '—'
     logo_apercu.short_description = 'Logo'
 
+    # ── ACTIONS ──────────────────────────────────────────────────────────────
+
     def passer_en_payant_1mois(self, request, queryset):
         from datetime import date, timedelta
         fin = date.today() + timedelta(days=30)
-        queryset.update(plan='payant', date_fin_essai=None, date_fin_abonnement=fin)
+        for entreprise in queryset:
+            entreprise.plan = 'payant'
+            entreprise.date_fin_essai = None
+            entreprise.date_fin_abonnement = fin
+            entreprise.save()
+            email = _email_admin_entreprise(entreprise)
+            if email:
+                sujet = 'Votre abonnement FinanceIQ est activé !'
+                corps = (
+                    f"Bonjour {entreprise.nom},\n\n"
+                    f"Nous avons bien reçu votre paiement. Votre accès à FinanceIQ est "
+                    f"maintenant actif jusqu'au {fin.strftime('%d/%m/%Y')}.\n\n"
+                    f"Vous pouvez continuer à gérer votre activité sereinement.\n\n"
+                    f"Merci de votre confiance,\n"
+                    f"L'équipe FinanceIQ"
+                )
+                _envoyer_async(sujet, corps, email)
         self.message_user(request, f'{queryset.count()} entreprise(s) activée(s) — accès jusqu\'au {fin.strftime("%d/%m/%Y")}.')
     passer_en_payant_1mois.short_description = '✅ Activer abonnement (1 mois)'
 
@@ -77,9 +115,21 @@ class EntrepriseAdmin(admin.ModelAdmin):
         today = date.today()
         for entreprise in queryset:
             base = entreprise.date_fin_abonnement if entreprise.date_fin_abonnement and entreprise.date_fin_abonnement > today else today
-            entreprise.date_fin_abonnement = base + timedelta(days=30)
+            nouvelle_fin = base + timedelta(days=30)
+            entreprise.date_fin_abonnement = nouvelle_fin
             entreprise.plan = 'payant'
             entreprise.save()
+            email = _email_admin_entreprise(entreprise)
+            if email:
+                sujet = 'Votre abonnement FinanceIQ a été renouvelé'
+                corps = (
+                    f"Bonjour {entreprise.nom},\n\n"
+                    f"Votre abonnement FinanceIQ a été renouvelé avec succès.\n\n"
+                    f"Votre accès est prolongé jusqu'au {nouvelle_fin.strftime('%d/%m/%Y')}.\n\n"
+                    f"À bientôt sur FinanceIQ,\n"
+                    f"L'équipe FinanceIQ"
+                )
+                _envoyer_async(sujet, corps, email)
         self.message_user(request, f'{queryset.count()} abonnement(s) renouvelé(s) de 30 jours.')
     renouveler_1mois.short_description = '🔄 Renouveler 1 mois'
 
@@ -88,9 +138,23 @@ class EntrepriseAdmin(admin.ModelAdmin):
         today = date.today()
         for entreprise in queryset:
             base = entreprise.date_fin_abonnement if entreprise.date_fin_abonnement and entreprise.date_fin_abonnement > today else today
-            entreprise.date_fin_abonnement = base + timedelta(days=90)
+            nouvelle_fin = base + timedelta(days=90)
+            entreprise.date_fin_abonnement = nouvelle_fin
             entreprise.plan = 'payant'
             entreprise.save()
+            email = _email_admin_entreprise(entreprise)
+            if email:
+                sujet = 'Votre abonnement FinanceIQ — 3 mois confirmés'
+                corps = (
+                    f"Bonjour {entreprise.nom},\n\n"
+                    f"Merci pour votre fidélité ! Votre abonnement trimestriel FinanceIQ "
+                    f"est confirmé.\n\n"
+                    f"Votre accès est assuré jusqu'au {nouvelle_fin.strftime('%d/%m/%Y')} "
+                    f"sans aucune interruption.\n\n"
+                    f"Nous restons disponibles pour toute question,\n"
+                    f"L'équipe FinanceIQ"
+                )
+                _envoyer_async(sujet, corps, email)
         self.message_user(request, f'{queryset.count()} abonnement(s) renouvelé(s) de 90 jours.')
     renouveler_3mois.short_description = '🔄 Renouveler 3 mois'
 
