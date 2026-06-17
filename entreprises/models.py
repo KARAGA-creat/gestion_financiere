@@ -28,18 +28,21 @@ class Entreprise(models.Model):
     class Meta:
         db_table = 'entreprise'
 
+    GRACE_DAYS = 5  # jours de grâce après échéance avant blocage automatique
+
     @property
     def acces_actif(self):
+        from datetime import timedelta
         today = timezone.now().date()
+        grace = timedelta(days=self.GRACE_DAYS)
         if self.plan == 'suspendu':
             return False
         if self.plan == 'essai':
-            if self.date_fin_essai and today > self.date_fin_essai:
+            if self.date_fin_essai and today > self.date_fin_essai + grace:
                 return False
             return True
         if self.plan == 'payant':
-            # Si une date d'abonnement est définie, elle prime
-            if self.date_fin_abonnement and today > self.date_fin_abonnement:
+            if self.date_fin_abonnement and today > self.date_fin_abonnement + grace:
                 return False
             return True
         return True

@@ -6,7 +6,7 @@ from .models import Entreprise
 
 @admin.register(Entreprise)
 class EntrepriseAdmin(admin.ModelAdmin):
-    list_display    = ('nom', 'plan_badge', 'acces_badge', 'date_fin_essai', 'date_fin_abonnement', 'devise', 'nb_utilisateurs', 'nb_transactions')
+    list_display    = ('nom', 'plan_badge', 'acces_badge', 'date_echeance', 'date_blocage_auto', 'devise', 'nb_utilisateurs', 'nb_transactions')
     search_fields   = ('nom',)
     list_filter     = ('plan', 'devise')
     ordering        = ('nom',)
@@ -27,6 +27,29 @@ class EntrepriseAdmin(admin.ModelAdmin):
             return format_html('<span style="color:#22C55E;font-weight:700">✓ Actif</span>')
         return format_html('<span style="color:#EF4444;font-weight:700">✗ Bloqué</span>')
     acces_badge.short_description = 'Accès'
+
+    def date_echeance(self, obj):
+        d = obj.date_fin_abonnement or obj.date_fin_essai
+        if not d:
+            return '—'
+        from datetime import date
+        if d < date.today():
+            return format_html('<span style="color:#EF4444;font-weight:600">{}</span>', d.strftime('%d/%m/%Y'))
+        return d.strftime('%d/%m/%Y')
+    date_echeance.short_description = 'Échéance'
+
+    def date_blocage_auto(self, obj):
+        from datetime import date, timedelta
+        d = obj.date_fin_abonnement or obj.date_fin_essai
+        if not d:
+            return '—'
+        blocage = d + timedelta(days=obj.GRACE_DAYS)
+        if blocage < date.today():
+            return format_html('<span style="color:#EF4444;font-weight:700">Expiré</span>')
+        jours = (blocage - date.today()).days
+        couleur = '#F59E0B' if jours <= 3 else '#94A3B8'
+        return format_html('<span style="color:{}">{} (J-{})</span>', couleur, blocage.strftime('%d/%m/%Y'), jours)
+    date_blocage_auto.short_description = 'Blocage auto (J-X)'
 
     def nb_utilisateurs(self, obj):
         return obj.utilisateurs.count()
